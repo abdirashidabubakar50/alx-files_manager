@@ -5,52 +5,57 @@ class RedisClient {
     this.client = createClient();
 
     this.client.on('error', (err) => {
-      console.log(`Redis client error: ${err}`);
+      console.error(`Redis client error: ${err.message}`);
     });
 
-    (async () => {
-      try {
-        await this.client.connect();
-        console.log('Redis client connected');
-      } catch (err) {
-        console.error(`Failed to connect to Redis: ${err}`);
-      }
-    })();
+    this.connected = false;
   }
 
-  // check if redis client is connected
+  async connect() {
+    if (!this.connected) {
+      try {
+        await this.client.connect();
+        this.connected = true;
+      } catch (err) {
+        console.error(`Failed to connect to Redis: ${err.message}`);
+      }
+    }
+  }
+
   isAlive() {
-    return this.client.isOpen;
+    return this.connected;
   }
 
   async get(key) {
     try {
+      await this.connect();
       return await this.client.get(key);
-    } catch (error) {
-      console.error(`Error getting key ${key}: ${error}`);
+    } catch (err) {
+      console.error(`Error getting key ${key}: ${err.message}`);
       return null;
     }
   }
 
-  // set a key-value pair in Redis with an expiration
   async set(key, value, duration) {
     try {
-      await this.client.set(key, value, 'EX', duration);
-    } catch (error) {
-      console.error(`Error setting key ${key}: ${error}`);
+      await this.connect();
+      await this.client.set(key, value, {
+        EX: duration,
+      });
+    } catch (err) {
+      console.error(`Error setting key ${key}: ${err.message}`);
     }
   }
 
-  // delete a key value pair in Redis
   async del(key) {
     try {
+      await this.connect();
       await this.client.del(key);
-    } catch (error) {
-      console.error(`Error deleting key ${key}" ${error}`);
+    } catch (err) {
+      console.error(`Error deleting key ${key}: ${err.message}`);
     }
   }
 }
 
-// create and export an instance of RedisClient
 const redisClient = new RedisClient();
 export default redisClient;
