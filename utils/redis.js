@@ -1,21 +1,17 @@
-import { createClient } from 'redis';
+import { createClient } from "redis";
 
 class RedisClient {
   constructor() {
     this.client = createClient();
-
-    this.client.on('error', (err) => {
+    this.client.on("error", (err) => {
       console.error(`Redis client error: ${err.message}`);
     });
-
-    this.connected = false;
   }
 
   async connect() {
-    if (!this.connected) {
+    if (!this.client.isOpen) {
       try {
         await this.client.connect();
-        this.connected = true;
       } catch (err) {
         console.error(`Failed to connect to Redis: ${err.message}`);
       }
@@ -23,13 +19,14 @@ class RedisClient {
   }
 
   isAlive() {
-    return this.connected;
+    return this.client.isOpen;
   }
 
   async get(key) {
     try {
       await this.connect();
-      return await this.client.get(key);
+      const value = await this.client.get(key);
+      return value === null ? null : value;
     } catch (err) {
       console.error(`Error getting key ${key}: ${err.message}`);
       return null;
