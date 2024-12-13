@@ -15,7 +15,7 @@ class AppContoller {
         users: await dbClient.nbUsers(),
         files: await dbClient.nbFiles(),
       };
-      res.status(200).send(stats)
+      res.status(200).send(stats);
     } catch (error) {
       res.status(500).json({ error: 'Unable to fetch stats' });
     }
