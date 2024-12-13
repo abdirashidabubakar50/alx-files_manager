@@ -1,5 +1,5 @@
-const redisClient = require('../utils/redis');
-const dbClient = require('../utils/db');
+import redisClient from '../utils/redis';
+import dbClient from '../utils/db';
 
 class AppContoller {
   static getStatus(req, res) {
@@ -11,13 +11,16 @@ class AppContoller {
 
   static async getStats(req, res) {
     try {
-      const users = await dbClient.nbUsers();
-      const files = await dbClient.nbFiles();
-      res.status(200).json({ users, files });
+      const userCount = await dbClient.nbUsers();
+      const filesCount = await dbClient.nbFiles();
+      res.status(200).json({
+        users: userCount,
+        files: filesCount
+      });
     } catch (error) {
       res.status(500).json({ error: 'Unable to fetch stats' });
     }
   }
 }
 
-module.exports = AppContoller;
+export default AppContoller;
