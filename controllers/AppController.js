@@ -10,13 +10,13 @@ class AppContoller {
   }
 
   static async getStats(req, res) {
-    const usersCount = await dbClient.nbUsers();
-    const filesCount = await dbClient.nbFiles();
-
-    res.status(200).json({
-      users: usersCount,
-      files: filesCount,
-    });
+    try {
+      const users = await dbClient.nbUsers();
+      const files = await dbClient.nbFiles();
+      res.status(200).json({ users, files });
+    } catch (error) {
+      res.status(500).json({ error: 'Unable to fetch stats' });
+    }
   }
 }
 
