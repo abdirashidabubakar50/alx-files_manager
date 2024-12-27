@@ -1,56 +1,60 @@
-import { createClient }from "redis";
+import redis from 'redis';
 
 class RedisClient {
   constructor() {
-    // Create Redis client with default options
-    this.client = createClient();
+    console.log('Initializing Redis client...');
 
-    // Handle errors
-    this.client.on("error", (err) => console.error(`Redis error: ${err}`));
+    // Create a Redis client
+    this.client = redis.createClient();
 
-    // Connect the client
-    this.client.connect().catch((err) => {
-      console.error(`Failed to connect to Redis: ${err}`);
+    // Listen for connection events
+    this.client.on('connect', () => console.log('Redis connected.'));
+    this.client.on('error', (err) => console.error(`Redis error: ${err}`));
+  }
+
+  isAlive() {
+    return this.client.connected; // `connected` is true if Redis is connected
+  }
+
+  get(key) {
+    return new Promise((resolve, reject) => {
+      this.client.get(key, (err, value) => {
+        if (err) {
+          console.error(`Failed to get key '${key}': ${err}`);
+          reject(err); // Explicit return
+          return;
+        }
+        resolve(value); // Explicit return
+      });
     });
   }
 
-  // Check if Redis is connected
-  isAlive() {
-    return this.client.isReady;
+  set(key, value, duration) {
+    return new Promise((resolve, reject) => {
+      this.client.setex(key, duration, value, (err) => {
+        if (err) {
+          console.error(`Failed to set key '${key}': ${err}`);
+          reject(err); // Explicit return
+          return;
+        }
+        resolve(true); // Explicit return
+      });
+    });
   }
 
-  // Get a value by key
-  async get(key) {
-    try {
-      return await this.client.get(key);
-    } catch (err) {
-      console.error(`Failed to get key ${key}: ${err}`);
-      return null;
-    }
-  }
-
-  // Set a key-value pair with expiration
-  async set(key, value, duration) {
-    try {
-      await this.client.set(key, value, { EX: duration });
-      return true;
-    } catch (err) {
-      console.error(`Failed to set key ${key}: ${err}`);
-      return false;
-    }
-  }
-
-  // Delete a key
-  async del(key) {
-    try {
-      await this.client.del(key);
-      return true;
-    } catch (err) {
-      console.error(`Failed to delete key ${key}: ${err}`);
-      return false;
-    }
+  del(key) {
+    return new Promise((resolve, reject) => {
+      this.client.del(key, (err) => {
+        if (err) {
+          console.error(`Failed to delete key '${key}': ${err}`);
+          reject(err); // Explicit return
+          return;
+        }
+        resolve(true); // Explicit return
+      });
+    });
   }
 }
 
 const redisClient = new RedisClient();
-module.exports = redisClient;
+export default redisClient;
