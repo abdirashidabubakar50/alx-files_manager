@@ -1,23 +1,25 @@
-import redisClient from "../utils/redis";
-import dbClient from "../utils/db";
+import redisClient from '../utils/redis';
+import dbClient from '../utils/db';
 
-class AppController {
-  static async getStatus(req, res) {
-    const redisStatus = redisClient.isAlive();
-    const dbStatus = dbClient.isAlive();
+class AppContoller {
+  static getStatus(req, res) {
     res.status(200).json({
-      redis: redisStatus,
-      db: dbStatus,
+      redis: redisClient.isAlive(),
+      db: dbClient.isAlive(),
     });
   }
 
   static async getStats(req, res) {
-    Promise.all([dbClient.nbUsers(), dbClient.nbFiles()]).then(
-      ([usersCount, filesCount]) => {
-        res.status(200).json({ users: usersCount, files: filesCount });
-      }
-    );
+    try {
+      const stats = {
+        users: await dbClient.nbUsers(),
+        files: await dbClient.nbFiles(),
+      };
+      res.status(200).send(stats);
+    } catch (error) {
+      res.status(500).json({ error: 'Unable to fetch stats' });
+    }
   }
 }
 
-export default AppController;
+export default AppContoller;
