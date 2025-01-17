@@ -1,56 +1,45 @@
-import redis from 'redis';
+import { createClient } from 'redis';
 
 class RedisClient {
   constructor() {
-    console.log('Initializing Redis client...');
+    // Create Redis client
+    this.client = createClient();
 
-    // Create a Redis client
-    this.client = redis.createClient();
-
-    // Listen for connection events
-    this.client.on('connect', () => console.log('Redis connected.'));
-    this.client.on('error', (err) => console.error(`Redis error: ${err}`));
+    // Handle errors
+    this.client.on('error', (err) => console.error('Redis error: ${err}'));
   }
 
+  // Check if Redis is connected
   isAlive() {
-    return this.client.connected; // `connected` is true if Redis is connected
+    return this.client.connected;
   }
 
-  get(key) {
+  // Get a value by key
+  async get(key) {
     return new Promise((resolve, reject) => {
-      this.client.get(key, (err, value) => {
-        if (err) {
-          console.error(`Failed to get key '${key}': ${err}`);
-          reject(err); // Explicit return
-          return;
-        }
-        resolve(value); // Explicit return
+      this.client.get(key, (err, reply) => {
+        if (err) reject(err);
+        resolve(reply);
       });
     });
   }
 
-  set(key, value, duration) {
+  // Set a key-value pair with expiration
+  async set(key, value, duration) {
     return new Promise((resolve, reject) => {
-      this.client.setex(key, duration, value, (err) => {
-        if (err) {
-          console.error(`Failed to set key '${key}': ${err}`);
-          reject(err); // Explicit return
-          return;
-        }
-        resolve(true); // Explicit return
+      this.client.set(key, value, 'EX', duration, (err, reply) => {
+        if (err) reject(err);
+        resolve(reply);
       });
     });
   }
 
-  del(key) {
+  // Delete a key
+  async del(key) {
     return new Promise((resolve, reject) => {
-      this.client.del(key, (err) => {
-        if (err) {
-          console.error(`Failed to delete key '${key}': ${err}`);
-          reject(err); // Explicit return
-          return;
-        }
-        resolve(true); // Explicit return
+      this.client.del(key, (err, reply) => {
+        if (err) reject(err);
+        resolve(reply);
       });
     });
   }
