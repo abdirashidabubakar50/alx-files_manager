@@ -15,7 +15,7 @@ class UsersController {
 
     try {
       // Check if user exists
-      const userExists = await ( await dbClient.db
+      const userExists = await (await dbClient.db
         .collection('users'))
         .findOne({ email });
       if (userExists) {
@@ -24,7 +24,7 @@ class UsersController {
 
       // Hash the password and insert the user
       const hashedPassword = sha1(password);
-      const result = await ( await dbClient.db.collection('users')).insertOne({
+      const result = await (await dbClient.db.collection('users')).insertOne({
         email,
         password: hashedPassword,
       });
