@@ -2,8 +2,6 @@ const { v4: uuidv4 } = require('uuid');
 const sha1 = require('sha1');
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
-const { MongoClient, ObjectId } = require('mongodb');
-
 
 class AuthController {
   static async getConnect(req, res) {
@@ -15,9 +13,10 @@ class AuthController {
     const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
     const [email, password] = credentials.split(':');
 
+    const hashedPassword = sha1(password);
     const user = await (await dbClient.db
       .collection('users'))
-      .findOne({ email, password: sha1(password) });
+      .findOne({ email, password: hashedPassword });
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
